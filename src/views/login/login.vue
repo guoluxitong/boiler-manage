@@ -89,7 +89,7 @@
     data() {
       return {
         wechatUrl: '',
-        applet:'/static/common/applet1.png',
+        applet:'/static/common/applet.png',
         loginInfo: null,
         activeName: 'first',
         loading: false,
@@ -105,8 +105,9 @@
         }
       };
     },
+
     created: function () {
-      this.wechatUrl = 'https://apis.sdcsoft.com.cn/wechat/login?url=http://ui.boilermanage.sdcsoft.com.cn//#/login'
+      this.wechatUrl = 'https://apis.sdcsoft.com.cn/wechat/customer/login?url=http://ui.boilermanage.sdcsoft.com.cn/#/login'
     },
     methods: {
       back(){

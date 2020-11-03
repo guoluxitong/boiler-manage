@@ -15,14 +15,21 @@ export function changeOrgName( id, customerName, status) {
     data: qs.stringify({ id: id, customerName: customerName, status: status})
   })
 }
-export function wechatlogin(account) {
+
+export function wechatlogin1(account) {
   return request({
     url: '/wechat/employee/find',
     method: 'get',
     params: { 'loginId': account}
   })
 }
-
+export function wechatlogin(openId) {
+  return request({
+    url: '/account/wechat/customer/login',
+    method: 'post',
+    data: qs.stringify(openId)
+  })
+}
 export function getUserInfo(employeeId) {
   return request({
     url: '/webapi/boilermanage/user/info',
