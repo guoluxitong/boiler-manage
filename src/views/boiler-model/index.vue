@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div style="margin-top: 20px" >
    <boiler-model-manage></boiler-model-manage>
   </div>
 </template>

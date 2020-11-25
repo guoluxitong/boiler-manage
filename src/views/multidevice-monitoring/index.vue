@@ -1,5 +1,5 @@
 <template>
-  <el-row>
+  <el-row style="margin-top: 20px">
     <device-map :map-height="mapHeight" :medias="medias" :powers="powers" :products="products" :customers="customers" :categories="categories" ak="eqPZV35edaZZGefOIopjLNqTSj4qI89Y" @search="search"  @onDeviceClicked="deviceClick"></device-map>
     <el-col :span="24">
     <el-row>
@@ -21,6 +21,10 @@
 </template>
 
 <script>
+  import { StringHashMap } from '@sdcsoft/comms'
+  import { SdcSoftClient } from '@tomcat008/sdcsoftclient'
+  import { DeviceAdapter,SdcSoftDevice2 } from '@tomcat008/devicelib'
+  import mqtt from 'mqtt'
   import { initMedium, initFuel } from "./product-dictionary";
   import { getProductCategoryList } from "@/api/productCategory";
   import {productSearch} from "@/api/product";
@@ -40,6 +44,8 @@ export default {
       categories: [],
       powers: [],
       medias: [],
+      client:null,
+      devicelist:new StringHashMap(),
       product: {
         boilerNo: "",
         customerId: null,
@@ -47,6 +53,14 @@ export default {
         tonnageNum: null,
         media: null,
         power: null
+      },
+      searchOption: {
+        boilerNo: "",
+        customer: null,
+        category: null,
+        tonnageNum: null,
+        media: null,
+        power: null,
       },
       mapHeight: document.documentElement.clientHeight - 100+ "px",
       cardHeight: document.documentElement.clientHeight,
@@ -67,7 +81,34 @@ export default {
       return 24 / this.colCount;
     }
   },
+  created(){
+    this.client = new SdcSoftClient(mqtt,"wss://skt.sdcsoft.cn", "8084", 'sdcsoft.com.cn', '80201288@qq.com', 'MAP-'+this.guid())
+    this.client.Connect()
+    this.client.addMessageListener("02031", (deviceno, msg) => {
+
+      if(msg.length == 0){
+        this.devicelist.remove(deviceno)
+      }else{
+        this.devicelist.addItem(deviceno,msg)
+      }
+
+    }).then((deviceno) => {
+      this.search(this.searchOption)
+    })
+  },
+  destroyed() {
+    this.client.removeMessageListener("02031", (deviceno, msg) => {
+    }).then((msg) => {
+      console.log('关闭监听成功！')
+    })
+  },
   methods: {
+    guid() {
+      function S4() {
+        return (((1 + Math.random()) * 0x10000) | 0).toString(16).substring(1);
+      }
+      return (S4() + S4() + "-" + S4() + "-" + S4() + "-" + S4() + "-" + S4() + S4() + S4());
+    },
     search(searchOption) {
       this.product.boilerNo=searchOption.boilerNo;
       this.product.controllerNo=searchOption.controllerNo;
@@ -88,14 +129,28 @@ export default {
           this.products = [];
           data.data.list.forEach(item => {
             if (item.isSell) {
-              this.products.push({
-                lng: item.longitude,
-                lat: item.latitude,
-                boilerNo: item.boilerNo,
-                controllerNo: item.controllerNo,
-                customerId:item.customerId,
-                address: item.street
-              });
+              if(this.devicelist.getItem(item.controllerNo)){
+                console.log(item.controllerNo)
+                this.products.push({
+                  lng: item.longitude,
+                  lat: item.latitude,
+                  boilerNo: item.boilerNo,
+                  controllerNo: item.controllerNo,
+                  customerId:item.customerId,
+                  address: item.street,
+                  onLione:true
+                });
+              }else{
+                this.products.push({
+                  lng: item.longitude,
+                  lat: item.latitude,
+                  boilerNo: item.boilerNo,
+                  controllerNo: item.controllerNo,
+                  customerId:item.customerId,
+                  address: item.street,
+                  onLione:false
+                });
+              }
             }
           });
         }

@@ -12,14 +12,13 @@ export default {
   name: "home",
   data() {
     return {
-      homeUrl: config.default_home_url+"?orgId="+this.$store.state.user.orgId,
+      homeUrl: "https://sugar.aipage.com/dashboard/d3f68df5dacbdfe6c9531bd5af74e79d?orgId="+this.$store.state.user.orgId,
       fullscreenLoading: false,
       //width: document.documentElement.clientWidth -18,
       height: document.documentElement.clientHeight -100
     };
   },
   created(){
-    this.initHomeIndex()
   },
   methods: {
     initHomeIndex() {

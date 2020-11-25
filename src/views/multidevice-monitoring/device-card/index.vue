@@ -64,13 +64,14 @@ export default {
     deviceRunInfo: deviceRunInfo
   },
   mounted() {
-    this.$refs.deviceRunInfo.startTimer();
+    this.$refs.deviceRunInfo.showDevice();
     this.visible = true
   },
   methods: {
     sendDeleteCardToParent() {
       //this.$refs.deviceRunInfo.stopTimer();
       this.visible = false
+      this.$refs.deviceRunInfo.stopTimer(this.controllerNo);
       this.$emit("onCardClosed", this.arrayIndex);
     }
   }

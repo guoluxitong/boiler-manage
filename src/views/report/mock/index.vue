@@ -1,5 +1,5 @@
 <template>
-<div>
+<div style="margin-top: 20px">
     <div v-if="showReport==0">
       <el-row class="app-query">
         <el-col :span="3">

@@ -1,5 +1,5 @@
 <template>
-  <div class="app-container product-container">
+  <div style="margin-top: 20px" class="app-container product-container">
     <div v-if="PartCategory==0">
       <!--查询-->
       <el-row class="app-query">

@@ -2,7 +2,7 @@
     <div>
         <template v-if="!fullMap">
         <navbar></navbar>
-        <breadcrumb class="breadcrumb-container"></breadcrumb>
+     <!--   <breadcrumb class="breadcrumb-container"></breadcrumb>-->
         </template>
         <app-main :style="{'height':appMainHeight+'px'}"></app-main>
     </div>

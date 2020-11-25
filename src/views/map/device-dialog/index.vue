@@ -58,10 +58,10 @@ export default {
   },
   methods: {
     opened() {
-      this.$refs.deviceRunInfo.startTimer();
+      this.$refs.deviceRunInfo.showDevice();
     },
     close() {
-      this.$refs.deviceRunInfo.stopTimer();
+      this.$refs.deviceRunInfo.stopTimer(this.controllerNo);
     }
   }
 };

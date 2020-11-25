@@ -1,5 +1,5 @@
 <template>
-  <div class="app-container boilerCustomer-container">
+  <div style="margin-top: 20px"  class="app-container boilerCustomer-container">
     <el-row class="app-query">
       <el-col :span="4">
       <el-input v-model="listQuery.name" placeholder="客户名称" ></el-input>
