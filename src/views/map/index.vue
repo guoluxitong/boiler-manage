@@ -2,7 +2,7 @@
   <div style="margin-top: 20px">
     <div class="map-container">
       <div>
-        <device-map :map-height="mapHeight" :medias="medias" :powers="powers" :devicewrans="devicewrans" :products="products" :customers="customers" :str="str" :categories="categories" :showwarn="showwarn" :showInfo="showInfo" ak="eqPZV35edaZZGefOIopjLNqTSj4qI89Y" @search="search" @onDeviceClicked="deviceClick" :show-full-btn="true"></device-map>
+        <device-map :map-height="mapHeight" :medias="medias" :powers="powers" :devicewrans="devicewrans" :products="products" :customers="customers" :exMsg="str" :categories="categories" :showwarn="showwarn" :showInfo="showInfo" ak="eqPZV35edaZZGefOIopjLNqTSj4qI89Y" @search="search" @onDeviceClicked="deviceClick" :show-full-btn="true"></device-map>
       </div>
       <device-dialog
         ref="deviceRunInfoDialog"
