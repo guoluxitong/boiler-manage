@@ -2,7 +2,7 @@
   <div style="margin-top: 20px">
     <div class="map-container">
       <div>
-        <device-map :map-height="mapHeight" :medias="medias" :powers="powers" :devicewrans="devicewrans" :products="products" :customers="customers" :categories="categories" :showwarn="showwarn" :showInfo="showInfo" ak="eqPZV35edaZZGefOIopjLNqTSj4qI89Y" @search="search" @onDeviceClicked="deviceClick" :show-full-btn="true"></device-map>
+        <device-map :map-height="mapHeight" :medias="medias" :powers="powers" :devicewrans="devicewrans" :products="products" :customers="customers" :str="str" :categories="categories" :showwarn="showwarn" :showInfo="showInfo" ak="eqPZV35edaZZGefOIopjLNqTSj4qI89Y" @search="search" @onDeviceClicked="deviceClick" :show-full-btn="true"></device-map>
       </div>
       <device-dialog
         ref="deviceRunInfoDialog"
@@ -23,7 +23,7 @@
   import { formatDateTime } from "@/utils/date";
   import { initMedium, initFuel } from "./product-dictionary";
   import { getProductCategoryList } from "@/api/productCategory";
-  import {productSearch} from "@/api/product";
+  import {productSearch,getDeviceNo,getDeviceDataMap,getDeviceInfo} from "@/api/product";
   import { getList } from "@/api/customer";
 import deviceMap from "@sdcsoft/components/components/map/device-map/index";
 import deviceDialog from "./device-dialog/index";
@@ -46,8 +46,11 @@ export default {
       client:null,
       client1:null,
       devicelist:new StringHashMap(),
-      deviceWarnlist:new StringHashMap(),
+      deviceWarnlist:null,
+      deviceWarnlists:new StringHashMap(),
+      ceshi:new StringHashMap(),
       controllerNo: "",
+      controller: null,
       boilerNo: null,
       product: {
         boilerNo: "",
@@ -66,6 +69,8 @@ export default {
         media: null,
         power: null,
       },
+      str:"",
+      deviceNo5:null,
       products: [],
       devicewrans: [],
       customers: [],
@@ -90,20 +95,30 @@ export default {
       } else {
         this.mapHeight = document.documentElement.clientHeight - 100 + "px";
       }
-    }
+    },
   },
   created(){
     this.client = new SdcSoftClient(mqtt,"wss://skt.sdcsoft.cn", "8084", 'sdcsoft.com.cn', '80201288@qq.com', 'MAP-'+this.guid())
     this.client.Connect()
-    this.client.addMessageListener("01017", (deviceno, msg) => {
-      if(msg.length == 0){
-        this.devicelist.remove(deviceno)
-      }else{
-        this.devicelist.addItem(deviceno,deviceno)
-      }
+    getDeviceNo({}).then(res => {
+      this.deviceNo5=res.data.data
+      this.client.addMessageListener(this.deviceNo5, (deviceno, msg) => {
+        this.constructor=deviceno
+     if(this.devicelist.getItem(deviceno)){
+       this.devicelist.remove(deviceno)
+       this.devicelist.addItem(deviceno,msg)
+       this.showDevice(this.constructor)
+       this.search(this.searchOption)
+     }else{
+       this.devicelist.addItem(deviceno,msg)
+       this.showDevice(this.constructor)
+       this.search(this.searchOption)
 
-    }).then((deviceno) => {
-      this.search(this.searchOption)
+     }
+      }).then((deviceno) => {
+
+
+      })
     })
   },
   destroyed() {
@@ -122,7 +137,7 @@ export default {
           }
         });
     })
-    this.client.removeMessageListener("01017", (deviceno, msg) => {
+    this.client.removeMessageListener(this.deviceNo5, (deviceno, msg) => {
     }).then((msg) => {
       this.client.OnClose = function (connect) {
         console.log('关闭连接')
@@ -130,56 +145,77 @@ export default {
     })
   },
   methods: {
-    getDataMap() {
-      if (this.datamapId) {
-        return webRequest.get("/wechat/DeviceDataMap/get", {
-          params: {id: this.datamapId  },
-        });
-      }
-    },
-    getDeviceInfo(controllerNo) {
-      if (controllerNo) {
-        return webRequest.post("/webapi/output/decoder/suffix", null, {
-          params: { deviceNo:controllerNo },
-        });
-      }
-    },
     handleDevice(controllerNo) {
       // var adapter = new NewframeDeviceAdapter()
-      this.getDataMap().then((data) => {
-          this.client.addMessageListener(controllerNo, (deviceno, msg) => {
-            //监听设备的数据
+      getDeviceDataMap(this.datamapId).then((data) => {
             let adapter = new DeviceAdapter()
             let addr = JSON.parse(data.data.data.pointIndexMap);
             let map = JSON.parse(data.data.data.deviceDataMap);
             adapter.Init(map, addr)
-            adapter.handlerData(new Uint8Array(msg))
-            //获取device对象
-            let device = adapter.Device
+        if( this.devicelist.getItem(controllerNo)){
+          adapter.handlerData(new Uint8Array(this.devicelist.getItem(controllerNo)))
+          //获取device对象
+          let device = adapter.Device
+          this.deviceWarnlist=new StringHashMap()
+          let time=  formatDateTime(new Date(), "yyyy-MM-dd hh:mm:ss")
+          if( this.deviceWarnlists.getItem(controllerNo)){
             if(device.bj.length>0){
-              let devicedatas = [];
               for (var i in device.bj) {
-                let devicedata = {
-                  title:  device.bj[i].name,
-                  valueString:device.bj[i].vstr,
-                };
-                devicedatas.push(devicedata);
+                let devicedata = controllerNo+device.bj[i].name
+                this.deviceWarnlist.addItem(devicedata,time)
               }
-              this.deviceWarnlist.addItem(controllerNo,devicedatas);
-            }else{
-              this.deviceWarnlist.remove(controllerNo)
-            }
+              this.deviceWarnlists.getItem(controllerNo).each( (keys,values) => {
+                  this.deviceWarnlist.each( (key1,value1) => {
+                  if(keys!=key1){
+                      if( this.deviceWarnlists.getItem(controllerNo).containsKey(key1)){
+                        if(this.deviceWarnlist.containsKey(keys)){
+                         return;
+                        }else{
+                          this.str= this.str+"\n"+keys+"消除"+time
+                        }
+                      }
+                  }else{
+                    this.deviceWarnlist.remove(key1)
+                    this.deviceWarnlist.addItem(key1,values)
+                  }
+                  })
+              })
+              this.deviceWarnlist.each( (key1,value1) => {
+                if(value1==time){
+                  this.str= this.str+"\n"+key1+time
+                }
 
-          }).then((controllerNo) => {
-            this.searchwarn(this.searchOption)
-          })
+              })
+              this.deviceWarnlists.addItem(controllerNo,this.deviceWarnlist)
+            }else{
+              this.deviceWarnlists.getItem(controllerNo).each( (keys,values)=> {
+
+                  this.str= this.str+"\n"+keys+"消除"+time
+                this.deviceWarnlists.getItem(controllerNo).remove(keys)
+              })
+              this.deviceWarnlists.remove(controllerNo)
+            }
+          } else{
+              if(device.bj.length>0){
+                for (var i in device.bj) {
+                  let devicedata = controllerNo+device.bj[i].name
+                  if(this.str==""){
+                    this.str=this.str+devicedata+time
+                  }else{
+                    this.str=this.str+"\n"+devicedata+time
+                  }
+                  this.deviceWarnlist.addItem(devicedata,time)
+                }
+                this.deviceWarnlists.addItem(controllerNo,this.deviceWarnlist)
+              }
+          }
+        }
         }) .catch((reason) => {
         this.$message.error(reason);
       });
     },
     showDevice(controllerNo) {
-      if(controllerNo){
-        this.getDeviceInfo(controllerNo).then((data) => {
+        getDeviceInfo(controllerNo).then((data) => {
           if(data.data.data.deviceDataMapCn){
             this.datamapId = data.data.data.deviceDataMapCn;
           }
@@ -192,8 +228,6 @@ export default {
           .catch((reason) => {
             console.log(reason);
           });
-      }
-
     },
     guid() {
       function S4() {
@@ -222,9 +256,7 @@ export default {
           this.devicewrans = [];
           data.data.list.forEach(item => {
             if (item.isSell) {
-              this.showDevice(this.devicelist.getItem(item.controllerNo))
               if(this.devicelist.getItem(item.controllerNo)){
-
                 this.products.push({
                   lng: item.longitude,
                   lat: item.latitude,
@@ -250,31 +282,6 @@ export default {
         }
       });
 
-    },
-    searchwarn(searchOption) {
-      productSearch({
-        product: this.product,
-        pageNum: 1,
-        pageSize: 1000
-      }).then(res => {
-        let data = res.data;
-          this.devicewrans = [];
-          data.data.list.forEach(item => {
-            if (item.isSell) {
-              if( this.deviceWarnlist.getItem(item.controllerNo)){
-                this.deviceWarnlist.getItem(item.controllerNo).forEach(data => {
-                  let devicedata = {
-                    deviceNo:  item.controllerNo,
-                    title:  data.title,
-                    time: formatDateTime(new Date(), "yyyy-MM-dd hh:mm:ss")
-                  };
-                  this.devicewrans.push(devicedata)
-                })
-              }
-            }
-
-          });
-      });
     },
     initSearchOptions() {
       getProductCategoryList().then(data => {

@@ -27,7 +27,7 @@
   import mqtt from 'mqtt'
   import { initMedium, initFuel } from "./product-dictionary";
   import { getProductCategoryList } from "@/api/productCategory";
-  import {productSearch} from "@/api/product";
+  import {productSearch,getDeviceNo} from "@/api/product";
   import { getList } from "@/api/customer";
  import deviceMap from "@sdcsoft/components/components/map/device-map/index";
 import deviceCard from "./device-card";
@@ -54,6 +54,7 @@ export default {
         media: null,
         power: null
       },
+      deviceNo5:null,
       searchOption: {
         boilerNo: "",
         customer: null,
@@ -84,20 +85,22 @@ export default {
   created(){
     this.client = new SdcSoftClient(mqtt,"wss://skt.sdcsoft.cn", "8084", 'sdcsoft.com.cn', '80201288@qq.com', 'MAP-'+this.guid())
     this.client.Connect()
-    this.client.addMessageListener("02031", (deviceno, msg) => {
+    getDeviceNo({}).then(res => {
+      this.deviceNo5=res.data.data
+      this.client.addMessageListener(this.deviceNo5, (deviceno, msg) => {
+        if(this.devicelist.getItem(deviceno)){
+        }else{
+          this.devicelist.addItem(deviceno,msg)
+        }
+        console.log(11111)
+        this.search(this.searchOption)
+      }).then((deviceno) => {
 
-      if(msg.length == 0){
-        this.devicelist.remove(deviceno)
-      }else{
-        this.devicelist.addItem(deviceno,msg)
-      }
-
-    }).then((deviceno) => {
-      this.search(this.searchOption)
+      })
     })
   },
   destroyed() {
-    this.client.removeMessageListener("02031", (deviceno, msg) => {
+    this.client.removeMessageListener(this.deviceNo5, (deviceno, msg) => {
     }).then((msg) => {
       console.log('关闭监听成功！')
     })
@@ -130,7 +133,6 @@ export default {
           data.data.list.forEach(item => {
             if (item.isSell) {
               if(this.devicelist.getItem(item.controllerNo)){
-                console.log(item.controllerNo)
                 this.products.push({
                   lng: item.longitude,
                   lat: item.latitude,

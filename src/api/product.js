@@ -68,3 +68,24 @@ export function deleteProductById(id,controllerNo) {
     data: qs.stringify({id: id, controllerNo: controllerNo})
   })
 }
+export function getDeviceNo(query) {
+  return request({
+    url: '/webapi/boilermanage/org/prefix',
+    method: 'post',
+    data: query
+  })
+}
+export function getDeviceInfo(deviceNo) {
+  return request({
+    url: '/webapi/output/decoder/suffix',
+    method: 'post',
+    params: { deviceNo:deviceNo }
+  })
+}
+export function getDeviceDataMap(datamapId) {
+  return request({
+    url: '/wechat/DeviceDataMap/get',
+    method: 'get',
+    params: {id:datamapId  }
+  })
+}
